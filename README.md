@@ -1,6 +1,6 @@
 # A sample Django application with Vault
 
-This project has been deveoped as a POC to show how we can use HashiCorp Vault with Django. The main objective is that there will be no secret in the codebase and application's secret will be read from Vault. Also, we need to ensure that the database secrets will be generated dynamically and will be valid only for a short period of time. **consul-template** will fetch new secret from Vault time-to-time and will write new secrets to `settings.py` dynamically.
+This project has been developed as a POC to show how we can use HashiCorp Vault with Django. The main objective is that there will be no secret in the codebase and application's secret will be read from Vault. Also, we need to ensure that the database secrets will be generated dynamically and will be valid only for a short period of time. **consul-template** will fetch new secret from Vault time-to-time and will write new secrets to `settings.py` dynamically.
 
 ## Vault
 
