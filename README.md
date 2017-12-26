@@ -122,15 +122,23 @@ $ vault read database/creds/admin
 
 ```
 $ cd {appplication_root_path}
-$ nano config.hcl
-$ consul-template -config=config.hcl
+$ nano vault/config.hcl
+$ consul-template -config=vault/config.hcl
 ```
 
 ## Authentication with AppRole
 
 An AppRole represents a set of Vault policies and login constraints that must be met to receive a token with those policies. The scope can be as narrow or broad as desired -- an AppRole can be created for a particular machine, or even a particular user on that machine, or a service spread across machines. The credentials required for successful login depend upon the constraints set on the AppRole associated with the credentials.
 
-Enable AppRole authentication:
+### Create a Policy
+
+Before enabling AppRole authentication, we will create a policy which will control application/user access to different paths. To create a new policy as my-policy in Vault:
+
+```
+vault write sys/policy/my-policy policy=@vault/my-policy.hcl
+```
+
+### Enable AppRole Authentication:
 
 ```
 $ vault auth-enable approle
@@ -141,7 +149,7 @@ Create a role:
 > **token_ttl** refers to the lifetime of a token where **token_max_ttl** refers to the maximum lifetime. token_max_ttl should be greater than token_ttl.
 
 ```
-$ vault write auth/approle/role/testrole secret_id_ttl=10m token_num_uses=10 token_ttl=20m token_max_ttl=30m secret_id_num_uses=40
+$ vault write auth/approle/role/testrole policies='my-policy' secret_id_ttl=525600m secret_id_num_uses=0 token_num_uses=0 token_ttl=540m token_max_ttl=1440m
 ```
 
 Fetch the RoleID of the AppRole:
@@ -156,7 +164,11 @@ Get a SecretID issued against the AppRole:
 $ vault write -f auth/approle/role/testrole/secret-id
 ```
 
-Login to get a Vault Token:
+### Get Vault Token and Authenticate
+
+#### CLI
+
+The RoleID and SecretID have to be provided to the App/User which/who will get credentials generating a Vault Token for it/him/her. We can get a Vault Token via CLI as follows:
 
 ```
 $ vault write auth/approle/login role_id={role-id} secret_id={secret_id}
@@ -166,6 +178,14 @@ Now authenticate with the newly generated token:
 
 ```
 vault auth {token}
+```
+
+#### Linux and MacOSX
+
+```
+$ cd {application-root-folder}/vault
+$ chmod +x get-credential-from-vault.sh
+$ ./get-credential-from-vault.sh
 ```
 
 ## Disclaimer
