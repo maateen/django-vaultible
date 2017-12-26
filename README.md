@@ -30,8 +30,9 @@ Vault is a tool for securely accessing secrets. A secret is anything that you wa
 
 ## Prerequisite
 - [x] Vault = v0.9.0
-- [x] PostgreSQL = v10.1
 - [x] consul-template = v0.19.4
+- [x] Docker = 17.09.1-ce
+- [x] PostgreSQL = v10.1
 
 ## Run vault as a dev mode
 
