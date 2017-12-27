@@ -94,7 +94,7 @@ After mounting this backend, wee need to configure it using the endpoints within
 > `allowed_roles` parameter refers to comma separated string or array of the role names allowed to get creds from this database connection. If empty no roles are allowed. If "*" all roles are allowed. The role can be configured as readonly, readwrite, admin and can be named as any.
 
 ```
-$ vault write database/config/testdb plugin_name=postgresql-database-plugin allowed_roles="admin" connection_url="postgresql://postgres:123456789@localhost:5432/postgres?sslmode=disable"
+$ vault write database/config/testdb plugin_name=postgresql-database-plugin allowed_roles="{role_name}" connection_url="postgresql://postgres:123456789@localhost:5432/postgres?sslmode=disable"
 ```
 
 The next step is to configure a role. A role is a logical name that maps to a policy used to generate those credentials. A role needs to be configured with the database name we created above, and the default/max TTLs.
@@ -107,16 +107,20 @@ The next step is to configure a role. A role is a logical name that maps to a po
 
 - "max_ttl (duration (sec))" maximum time a credential is valid for.
 
-Lets create a role named 'admin':
+Lets create roles for admin, readwrite, readonly:
 
 ```
 $ vault write database/roles/admin db_name=testdb creation_statements="CREATE ROLE \"{{name}}\" WITH SUPERUSER LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';" revocation_sql="SELECT revoke_access('{{name}}'); DROP user \"{{name}}\";" default_ttl="300" max_ttl="600"
+$ vault write database/roles/readwrite db_name=testdb creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" revocation_sql="SELECT revoke_access('{{name}}'); DROP user \"{{name}}\";" default_ttl="300" max_ttl="600"
+$ vault write database/roles/readonly db_name=testdb creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" revocation_sql="SELECT revoke_access('{{name}}'); DROP user \"{{name}}\";" default_ttl="300" max_ttl="600"
 ```
 
 To generate a new set of credentials, we simply read from that role:
 
 ```
 $ vault read database/creds/admin
+$ vault read database/creds/readwrite
+$ vault read database/creds/readonly
 ```
 
 ## consul-template
@@ -153,16 +157,18 @@ Create a role:
 $ vault write auth/approle/role/testrole policies='my-policy' secret_id_ttl=525600m secret_id_num_uses=0 token_num_uses=0 token_ttl=540m token_max_ttl=1440m
 ```
 
-Fetch the RoleID of the AppRole:
+Fetch the RoleID of the AppRole and set as environment variable (RoleID):
 
 ```
 $ vault read auth/approle/role/testrole/role-id
+$ export RoleID={role-id}
 ```
 
-Get a SecretID issued against the AppRole:
+Get a SecretID issued against the AppRole and set as environment variable (SecretID):
 
 ```
 $ vault write -f auth/approle/role/testrole/secret-id
+$ export SecretID={secret-id}
 ```
 
 ### Get Vault Token and Authenticate
