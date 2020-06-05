@@ -1,6 +1,6 @@
 certifi==2017.11.5
 chardet==3.0.4
-Django==2.0
+Django==2.2.13
 hvac==0.3.0
 idna==2.6
 psycopg2==2.7.3.2
